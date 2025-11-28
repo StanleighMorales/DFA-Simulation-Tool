@@ -9,11 +9,12 @@ from matplotlib.figure import Figure
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QLineEdit, QFileDialog, QMessageBox, QTextEdit,
-    QScrollArea
+    QScrollArea, QDialog
 )
 from PyQt5.QtCore import Qt
 
 from dfa import DFA, import_dfa_from_json, is_accepted, trace_execution
+from dfa_builder import DFABuilderDialog
 
 
 class DFACanvas(FigureCanvas):
@@ -193,12 +194,17 @@ class DFAVisualizerWindow(QMainWindow):
         title.setAlignment(Qt.AlignCenter)
         left_panel.addWidget(title)
         
-        # Load and Clear DFA buttons
+        # Load, Create, and Clear DFA buttons
         btn_layout = QHBoxLayout()
         
-        load_btn = QPushButton('📁 Load DFA')
+        load_btn = QPushButton('📁 Load')
         load_btn.clicked.connect(self.load_dfa)
         btn_layout.addWidget(load_btn)
+        
+        create_btn = QPushButton('✏️ Create')
+        create_btn.clicked.connect(self.create_dfa)
+        create_btn.setStyleSheet('background-color: #2196F3; color: white;')
+        btn_layout.addWidget(create_btn)
         
         clear_dfa_btn = QPushButton('🗑️ Clear')
         clear_dfa_btn.clicked.connect(self.clear_dfa)
@@ -305,6 +311,28 @@ class DFAVisualizerWindow(QMainWindow):
                 
             except Exception as e:
                 QMessageBox.critical(self, 'Error', f'Failed to load DFA:\n{str(e)}')
+    
+    def create_dfa(self):
+        """Open DFA builder dialog to create a DFA manually."""
+        builder = DFABuilderDialog(self)
+        if builder.exec_() == QDialog.Accepted:
+            dfa = builder.get_dfa()
+            if dfa:
+                self.dfa = dfa
+                self.canvas.set_dfa(self.dfa)
+                
+                info_text = (
+                    f"<b>Created Manually</b><br>"
+                    f"States: {', '.join(sorted(self.dfa.states))}<br>"
+                    f"Alphabet: {', '.join(sorted(self.dfa.alphabet))}<br>"
+                    f"Start State: {self.dfa.start_state}<br>"
+                    f"Final States: {', '.join(sorted(self.dfa.final_states))}<br>"
+                    f"Transitions: {len(self.dfa.transitions)}"
+                )
+                self.info_label.setText(info_text)
+                
+                self.result_label.setText('')
+                self.trace_output.clear()
     
     def clear_dfa(self):
         """Clear the loaded DFA and reset everything."""
