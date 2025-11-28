@@ -1,6 +1,63 @@
 # DFA Simulator with Step-by-Step Debugger
 
-A Python implementation of a Deterministic Finite Automaton (DFA) simulator with comprehensive debugging capabilities.
+A Python implementation of a Deterministic Finite Automaton (DFA) simulator with comprehensive debugging capabilities and interactive GUI.
+
+## 🚀 Quick Start
+
+> **New to the project?** See **[GETTING_STARTED.md](GETTING_STARTED.md)** for a complete step-by-step guide!
+
+### Clone the Repository
+
+```bash
+# Clone the repository
+git clone https://github.com/StanleighMorales/DFA-Simulation-Tool.git
+
+# Navigate to the project directory
+cd DFASimulator
+```
+
+### Install Dependencies
+
+**Option 1: Core Only (No GUI)**
+```bash
+# No installation needed! Just Python 3.7+
+python dfa.py
+```
+
+**Option 2: Full Features (With GUI)**
+```bash
+# Install GUI packages
+pip install PyQt5 matplotlib networkx
+
+# Or use requirements file
+pip install -r requirements.txt
+```
+
+### Run the Application
+
+**Interactive Debugger (Recommended):**
+```bash
+python interactive_debugger.py
+```
+
+**Basic Visualizer:**
+```bash
+python dfa_visualizer.py
+```
+
+**Test Core Functionality:**
+```bash
+python dfa.py
+```
+
+### First Steps
+
+1. **Load a DFA**: Click "📁 Load" and select `even_a_dfa.json`
+2. **Or Create One**: Click "✏️ Create" to build a DFA manually
+3. **Test a String**: Enter "aba" and click "▶ Run"
+4. **Step Through**: Click "⏭ Next Step" to see execution
+
+---
 
 ## Features
 
@@ -91,6 +148,100 @@ See **[DOCUMENTATION.md](DOCUMENTATION.md)** for the complete guide, or jump dir
 
 ---
 
+## 📦 Installation & Setup
+
+### System Requirements
+
+- **Python**: 3.7 or higher
+- **Operating System**: Windows, macOS, or Linux
+- **RAM**: 512MB minimum
+- **Display**: 1024x768 minimum (1920x1080 recommended)
+
+### Step-by-Step Setup
+
+#### 1. Clone the Repository
+
+```bash
+# Using HTTPS
+git clone https://github.com/yourusername/DFASimulator.git
+
+# Or using SSH
+git clone git@github.com:yourusername/DFASimulator.git
+
+# Navigate to project
+cd DFASimulator
+```
+
+#### 2. Verify Python Installation
+
+```bash
+python --version
+# Should show Python 3.7 or higher
+```
+
+If Python is not installed:
+- **Windows**: Download from [python.org](https://www.python.org/downloads/)
+- **macOS**: `brew install python3` or download from python.org
+- **Linux**: `sudo apt install python3` (Ubuntu/Debian)
+
+#### 3. Install Dependencies (Optional - For GUI)
+
+**Using pip:**
+```bash
+pip install PyQt5 matplotlib networkx
+```
+
+**Using requirements.txt:**
+```bash
+pip install -r requirements.txt
+```
+
+**Using virtual environment (Recommended):**
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate it
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+# Install packages
+pip install -r requirements.txt
+```
+
+#### 4. Verify Installation
+
+```bash
+# Test core functionality (no dependencies needed)
+python dfa.py
+
+# Test GUI (requires packages)
+python interactive_debugger.py
+```
+
+### Troubleshooting Installation
+
+**"pip not found":**
+```bash
+python -m pip install PyQt5 matplotlib networkx
+```
+
+**Permission errors:**
+```bash
+pip install --user PyQt5 matplotlib networkx
+```
+
+**Package conflicts:**
+```bash
+pip install --upgrade PyQt5 matplotlib networkx
+```
+
+For more help, see [Installation Guide](docs/setup/INSTALLATION.md)
+
+---
+
 ## Usage
 
 ### Basic Usage
@@ -165,6 +316,52 @@ Features:
 - **Visual highlighting of current state and transitions**
 
 See `GUI_README.md` and `INTERACTIVE_DEBUGGER_GUIDE.md` for detailed documentation.
+
+## 📁 Repository Structure
+
+```
+DFASimulator/
+├── 📄 Core Files
+│   ├── dfa.py                      # Main DFA implementation
+│   ├── dfa_builder.py              # Manual DFA creation GUI
+│   ├── interactive_debugger.py     # Interactive step-by-step debugger
+│   ├── dfa_visualizer.py           # Basic visualizer
+│   └── requirements.txt            # Python dependencies
+│
+├── 📊 Example DFAs (JSON)
+│   ├── even_a_dfa.json             # Even number of 'a's
+│   ├── ends_with_ab.json           # Strings ending with "ab"
+│   ├── divisible_by_3.json         # Binary divisible by 3
+│   └── odd_b_dfa.json              # Odd number of 'b's
+│
+├── 🧪 Demo & Test Files
+│   ├── debugger_demo.py            # Debugging demonstrations
+│   ├── test_import_export.py       # Import/export tests
+│   ├── import_export_example.py    # Usage examples
+│   └── complete_workflow_demo.py   # Complete workflow
+│
+├── 📚 Documentation
+│   ├── docs/
+│   │   ├── README.md               # Documentation index
+│   │   ├── QUICKSTART.md           # 5-minute tutorial
+│   │   ├── setup/
+│   │   │   └── INSTALLATION.md     # Installation guide
+│   │   ├── usage/
+│   │   │   ├── USER_GUIDE.md       # Complete user guide
+│   │   │   ├── EXAMPLES.md         # Usage examples
+│   │   │   ├── FAQ.md              # Common questions
+│   │   │   └── MANUAL_DFA_CREATION.md  # Manual creation guide
+│   │   ├── technical/
+│   │   │   ├── JSON_SCHEMA.md      # JSON format spec
+│   │   │   └── SYSTEM_ARCHITECTURE.md  # System design
+│   │   └── updates/
+│   │       └── RECENT_UPDATES.md   # Latest changes
+│   └── DOCUMENTATION.md            # Documentation guide
+│
+└── 📖 README.md                    # This file
+```
+
+---
 
 ## Files
 
