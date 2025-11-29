@@ -21,13 +21,17 @@ Click the **"✏️ Create"** button
 ## Button Layout
 
 ```
-┌────────────────────────────────┐
-│  📁 Load  ✏️ Create  🗑️ Clear  │
-└────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  📁 Load      ✏️ Create              │
+│  📝 Edit      💾 Export              │
+│  🗑️ Clear                            │
+└──────────────────────────────────────┘
 ```
 
 - **📁 Load**: Load DFA from JSON file
-- **✏️ Create**: Build DFA manually (NEW!)
+- **✏️ Create**: Build DFA manually
+- **📝 Edit**: Edit existing DFA
+- **💾 Export**: Export DFA to JSON
 - **🗑️ Clear**: Clear current DFA
 
 ---
@@ -316,10 +320,94 @@ from dfa import export_dfa_to_json
 export_dfa_to_json(dfa, "my_dfa.json")
 ```
 
-### Option 2: Recreate Later
+### Option 2: Use Export Button (NEW!)
+- Click **"💾 Export as JSON"** in the builder
+- Choose filename and location
+- Continue editing or close
+- No need to recreate!
+
+### Option 3: Recreate Later
 - Remember your design
 - Use builder again
 - Or write JSON manually
+
+---
+
+## Export as JSON Feature
+
+### Overview
+
+The **"💾 Export as JSON"** button allows you to save your DFA while still in the builder, without closing the dialog.
+
+### When to Use Export
+
+✅ **Save work in progress**
+- Export partial DFAs
+- Continue editing after export
+- Create backups before major changes
+
+✅ **Share with others**
+- Export completed DFAs
+- Share JSON files
+- Others can load and use
+
+✅ **Version control**
+- Export different versions
+- Compare changes
+- Keep history
+
+### How to Export
+
+1. **Build your DFA** (add states, alphabet, transitions, etc.)
+2. **Click "💾 Export as JSON"** button at the bottom
+3. **Choose filename** (e.g., `my_dfa.json`)
+4. **Click Save**
+5. **Success message** appears
+6. **Continue editing** or click "Create DFA" to load it
+
+### Export vs Create DFA
+
+| Feature | Export as JSON | Create DFA |
+|---------|---------------|------------|
+| **Saves to file** | ✅ Yes | ❌ No |
+| **Closes dialog** | ❌ No | ✅ Yes |
+| **Loads into app** | ❌ No | ✅ Yes |
+| **Use case** | Save/share | Finish & use |
+
+### Export Validation
+
+The export feature validates your DFA before saving:
+
+**Required:**
+- ✅ At least one state
+- ✅ At least one symbol
+- ✅ Start state set
+
+**Optional (with warning):**
+- ⚠️ Final states (warns if none)
+- ⚠️ Complete transitions (warns if missing)
+
+### Example Workflow
+
+```
+1. Click "✏️ Create" to open builder
+2. Add states: q0, q1
+3. Add alphabet: a, b
+4. Add some transitions
+5. Click "💾 Export as JSON"
+6. Save as "work_in_progress.json"
+7. Continue adding more transitions
+8. Click "💾 Export as JSON" again
+9. Save as "my_dfa_v2.json"
+10. Click "✓ Create DFA" to finish
+```
+
+### Benefits
+
+✅ **No data loss** - Save anytime
+✅ **Incremental saves** - Export multiple versions
+✅ **Easy sharing** - Standard JSON format
+✅ **Flexible workflow** - Save and continue editing
 
 ---
 

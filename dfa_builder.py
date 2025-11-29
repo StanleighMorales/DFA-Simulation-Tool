@@ -4,7 +4,7 @@ DFA Builder - GUI for manually creating DFAs
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QListWidget, QGroupBox, QMessageBox, QTableWidget,
-    QTableWidgetItem, QHeaderView, QComboBox
+    QTableWidgetItem, QHeaderView, QComboBox, QFileDialog
 )
 from PyQt5.QtCore import Qt
 from dfa import DFA
@@ -198,6 +198,11 @@ class DFABuilderDialog(QDialog):
         # Bottom buttons
         button_layout = QHBoxLayout()
         
+        export_btn = QPushButton('💾 Export as JSON')
+        export_btn.setStyleSheet('background-color: #9C27B0; color: white; padding: 10px;')
+        export_btn.clicked.connect(self.export_dfa)
+        button_layout.addWidget(export_btn)
+        
         create_btn = QPushButton('✓ Create DFA')
         create_btn.setStyleSheet('background-color: #4CAF50; color: white; padding: 10px; font-weight: bold;')
         create_btn.clicked.connect(self.create_dfa)
@@ -383,6 +388,74 @@ class DFABuilderDialog(QDialog):
             self.transitions_table.setItem(row, 0, QTableWidgetItem(from_state))
             self.transitions_table.setItem(row, 1, QTableWidgetItem(symbol))
             self.transitions_table.setItem(row, 2, QTableWidgetItem(to_state))
+    
+    def export_dfa(self):
+        """Export the current DFA configuration to a JSON file."""
+        # Validate basic requirements
+        if not self.states:
+            QMessageBox.warning(self, 'Incomplete', 'Please add at least one state before exporting.')
+            return
+        
+        if not self.alphabet:
+            QMessageBox.warning(self, 'Incomplete', 'Please add at least one symbol before exporting.')
+            return
+        
+        if not self.start_state:
+            QMessageBox.warning(self, 'Incomplete', 'Please set a start state before exporting.')
+            return
+        
+        # Warn about missing final states
+        if not self.final_states:
+            reply = QMessageBox.question(
+                self, 'No Final States',
+                'No final states defined. This DFA will reject all strings. Export anyway?',
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if reply == QMessageBox.No:
+                return
+        
+        # Check for incomplete transitions
+        missing = []
+        for state in self.states:
+            for symbol in self.alphabet:
+                if (state, symbol) not in self.transitions:
+                    missing.append(f"({state}, {symbol})")
+        
+        if missing:
+            reply = QMessageBox.question(
+                self, 'Incomplete Transitions',
+                f'Missing transitions: {", ".join(missing[:5])}{"..." if len(missing) > 5 else ""}\n\n'
+                f'Total missing: {len(missing)}\n\n'
+                f'Export anyway? (DFA may not work correctly)',
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if reply == QMessageBox.No:
+                return
+        
+        # Try to create and export DFA
+        try:
+            temp_dfa = DFA(
+                states=set(self.states),
+                alphabet=set(self.alphabet),
+                transitions=self.transitions,
+                start_state=self.start_state,
+                final_states=set(self.final_states)
+            )
+            
+            # Open file dialog
+            filename, _ = QFileDialog.getSaveFileName(
+                self, 'Export DFA as JSON', 'my_dfa.json', 'JSON Files (*.json);;All Files (*)'
+            )
+            
+            if filename:
+                from dfa import export_dfa_to_json
+                export_dfa_to_json(temp_dfa, filename)
+                QMessageBox.information(
+                    self, 'Success', 
+                    f'DFA exported to {filename}\n\nYou can continue editing or click "Create DFA" to load it.'
+                )
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', f'Failed to export DFA:\n{str(e)}')
     
     def create_dfa(self):
         """Create the DFA and close dialog."""

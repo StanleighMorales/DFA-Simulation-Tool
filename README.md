@@ -54,8 +54,9 @@ python dfa.py
 
 1. **Load a DFA**: Click "📁 Load" and select `even_a_dfa.json`
 2. **Or Create One**: Click "✏️ Create" to build a DFA manually
-3. **Test a String**: Enter "aba" and click "▶ Run"
-4. **Step Through**: Click "⏭ Next Step" to see execution
+3. **Export to JSON**: Click "💾 Export" to save your DFA (NEW!)
+4. **Test a String**: Enter "aba" and click "▶ Run"
+5. **Step Through**: Click "⏭ Next Step" to see execution
 
 ---
 
@@ -309,6 +310,8 @@ python interactive_debugger.py
 Features:
 - Interactive graph visualization
 - Load DFA from JSON files
+- **Create DFAs manually with GUI builder**
+- **Export DFAs to JSON from builder** (NEW!)
 - Test strings with visual feedback
 - Step-by-step execution traces
 - Path highlighting
