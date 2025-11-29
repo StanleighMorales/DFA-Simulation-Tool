@@ -1,6 +1,33 @@
 """
 DFA Builder - GUI for manually creating DFAs
+
+This module provides a graphical user interface for creating and editing
+Deterministic Finite Automata (DFAs) without writing JSON files manually.
+
+Key Features:
+- Step-by-step DFA construction (states, alphabet, transitions, etc.)
+- Visual feedback and validation
+- Export to JSON while continuing to edit
+- Edit existing DFAs
+- Comprehensive error checking
+
+Classes:
+    DFABuilderDialog: Main dialog for building/editing DFAs
+
+Usage:
+    from dfa_builder import DFABuilderDialog
+    
+    # Create new DFA
+    builder = DFABuilderDialog()
+    if builder.exec_() == QDialog.Accepted:
+        dfa = builder.get_dfa()
+    
+    # Edit existing DFA
+    builder = DFABuilderDialog(existing_dfa=my_dfa)
+    if builder.exec_() == QDialog.Accepted:
+        dfa = builder.get_dfa()
 """
+
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QListWidget, QGroupBox, QMessageBox, QTableWidget,
@@ -11,46 +38,159 @@ from dfa import DFA
 
 
 class DFABuilderDialog(QDialog):
-    """Dialog for manually creating a DFA."""
+    """
+    Dialog for manually creating or editing a Deterministic Finite Automaton (DFA).
+    
+    This dialog provides a step-by-step interface for building DFAs:
+    1. Define states (Q)
+    2. Define alphabet (Σ)
+    3. Define transitions (δ)
+    4. Set start state (q₀)
+    5. Set final/accept states (F)
+    
+    The dialog supports two modes:
+    - Create mode: Build a new DFA from scratch
+    - Edit mode: Modify an existing DFA
+    
+    Key Methods:
+        - export_dfa(): Export DFA to JSON without closing dialog
+        - create_dfa(): Create DFA and close dialog (loads into app)
+        - get_dfa(): Retrieve the created DFA object
+        - load_existing_dfa(): Load existing DFA for editing
+    
+    Attributes:
+        states (list): List of state names (strings)
+        alphabet (list): List of alphabet symbols (strings)
+        transitions (dict): Transition function as {(state, symbol): next_state}
+        start_state (str): Name of the start state
+        final_states (list): List of final/accept state names
+    
+    Example:
+        # Create new DFA
+        builder = DFABuilderDialog()
+        if builder.exec_() == QDialog.Accepted:
+            dfa = builder.get_dfa()
+            # Use dfa...
+        
+        # Edit existing DFA
+        builder = DFABuilderDialog(existing_dfa=my_dfa)
+        if builder.exec_() == QDialog.Accepted:
+            modified_dfa = builder.get_dfa()
+    """
     
     def __init__(self, parent=None, existing_dfa=None):
+        """
+        Initialize the DFA Builder Dialog.
+        
+        Args:
+            parent (QWidget, optional): Parent widget. Defaults to None.
+            existing_dfa (DFA, optional): Existing DFA to edit. If provided,
+                the dialog will be in "Edit" mode and pre-populated with the
+                DFA's components. If None, dialog is in "Create" mode.
+        
+        The dialog is modal, meaning it blocks interaction with other windows
+        until it is closed.
+        """
         super().__init__(parent)
+        
+        # Set window title based on mode (Create vs Edit)
         self.setWindowTitle('Edit DFA' if existing_dfa else 'Create DFA Manually')
-        self.setGeometry(150, 150, 800, 600)
+        
+        # Set dialog size and position
+        self.setGeometry(150, 150, 800, 600)  # x, y, width, height
+        
+        # Make dialog modal (blocks other windows)
         self.setModal(True)
         
-        self.states = []
-        self.alphabet = []
-        self.transitions = {}
-        self.start_state = None
-        self.final_states = []
+        # ============================================================
+        # Initialize DFA Components
+        # ============================================================
+        # These store the DFA's 5-tuple components:
+        # DFA = (Q, Σ, δ, q₀, F)
         
+        self.states = []          # Q: Set of states (stored as list for ordering)
+        self.alphabet = []        # Σ: Alphabet (input symbols)
+        self.transitions = {}     # δ: Transition function {(state, symbol): next_state}
+        self.start_state = None   # q₀: Start state
+        self.final_states = []    # F: Set of final/accept states
+        
+        # ============================================================
+        # Build User Interface
+        # ============================================================
+        # Create all GUI components (buttons, lists, tables, etc.)
         self.init_ui()
         
-        # Load existing DFA if provided
+        # ============================================================
+        # Load Existing DFA (if in Edit mode)
+        # ============================================================
+        # If an existing DFA was provided, populate the dialog with its data
         if existing_dfa:
             self.load_existing_dfa(existing_dfa)
     
     def init_ui(self):
-        """Initialize the user interface."""
+        """
+        Initialize the user interface for the DFA Builder.
+        
+        This method creates all GUI components organized in a step-by-step layout:
+        
+        Layout Structure:
+        ┌─────────────────────────────────────────┐
+        │           Build Your DFA                │  ← Title
+        ├─────────────────────────────────────────┤
+        │  Instructions...                        │  ← Help text
+        ├──────────────────┬──────────────────────┤
+        │ 1. States        │ 3. Transitions       │  ← Two columns
+        │ 2. Alphabet      │ 4. Start & Final     │
+        ├──────────────────┴──────────────────────┤
+        │  [Export] [Create DFA] [Cancel]         │  ← Action buttons
+        └─────────────────────────────────────────┘
+        
+        Components Created:
+        - Title label
+        - Instructions label
+        - States section (list + add/remove buttons)
+        - Alphabet section (list + add/remove buttons)
+        - Transitions section (table + add/remove buttons)
+        - Start & Final states section (combos + lists)
+        - Action buttons (Export, Create DFA, Cancel)
+        
+        All components are connected to their respective handler methods.
+        """
+        
+        # ============================================================
+        # Main Layout Setup
+        # ============================================================
+        # Vertical layout for the entire dialog
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         
-        # Title
+        # ============================================================
+        # Title Section
+        # ============================================================
+        # Large, bold title at the top of the dialog
         title = QLabel('Build Your DFA')
         title.setStyleSheet('font-size: 18px; font-weight: bold; padding: 10px;')
-        title.setAlignment(Qt.AlignCenter)
+        title.setAlignment(Qt.AlignCenter)  # Center the title
         main_layout.addWidget(title)
         
-        # Instructions
+        # ============================================================
+        # Instructions Section
+        # ============================================================
+        # Brief instructions to guide the user
+        # Light blue background (#e3f2fd) makes it stand out
         instructions = QLabel(
             'Create a DFA by defining states, alphabet, transitions, start state, and final states.'
         )
-        instructions.setWordWrap(True)
+        instructions.setWordWrap(True)  # Allow text to wrap to multiple lines
         instructions.setStyleSheet('padding: 5px; background-color: #e3f2fd; border-radius: 3px;')
         main_layout.addWidget(instructions)
         
-        # Content layout (two columns)
+        # ============================================================
+        # Content Layout (Two Columns)
+        # ============================================================
+        # Horizontal layout to split content into left and right columns
+        # Left: States and Alphabet
+        # Right: Transitions and Start/Final States
         content_layout = QHBoxLayout()
         main_layout.addLayout(content_layout)
         
@@ -195,23 +335,83 @@ class DFABuilderDialog(QDialog):
         special_group.setLayout(special_layout)
         right_column.addWidget(special_group)
         
-        # Bottom buttons
+        # ============================================================
+        # Bottom Action Buttons
+        # ============================================================
+        # Three buttons for different actions:
+        # 1. Export as JSON - Save to file, keep dialog open
+        # 2. Create DFA - Finish and load into application
+        # 3. Cancel - Close without creating DFA
+        
         button_layout = QHBoxLayout()
         
+        # ------------------------------------------------------------
+        # Export Button (NEW FEATURE)
+        # ------------------------------------------------------------
+        # Allows users to save their DFA to a JSON file while continuing
+        # to work in the builder. This is useful for:
+        # - Saving work in progress
+        # - Creating backups before major changes
+        # - Exporting multiple versions
+        # - Sharing DFAs with others
+        #
+        # Key differences from "Create DFA":
+        # - Does NOT close the dialog
+        # - Does NOT load DFA into the application
+        # - Can be used multiple times
+        # - Validates before export but allows incomplete DFAs with warnings
+        
         export_btn = QPushButton('💾 Export as JSON')
+        
+        # Purple color (#9C27B0) distinguishes it from other buttons
+        # White text for contrast, 10px padding for comfortable clicking
         export_btn.setStyleSheet('background-color: #9C27B0; color: white; padding: 10px;')
+        
+        # Connect to export_dfa method (defined below)
         export_btn.clicked.connect(self.export_dfa)
+        
+        # Add to button layout
         button_layout.addWidget(export_btn)
         
+        # ------------------------------------------------------------
+        # Create DFA Button (Primary Action)
+        # ------------------------------------------------------------
+        # This is the main action button that:
+        # - Validates the DFA
+        # - Creates the DFA object
+        # - Closes the dialog
+        # - Returns the DFA to the calling application
+        #
+        # Use this when you're done building and want to use the DFA
+        
         create_btn = QPushButton('✓ Create DFA')
+        
+        # Green color (#4CAF50) indicates primary/success action
+        # Bold font emphasizes this is the main action
         create_btn.setStyleSheet('background-color: #4CAF50; color: white; padding: 10px; font-weight: bold;')
+        
+        # Connect to create_dfa method
         create_btn.clicked.connect(self.create_dfa)
+        
+        # Add to button layout
         button_layout.addWidget(create_btn)
         
+        # ------------------------------------------------------------
+        # Cancel Button
+        # ------------------------------------------------------------
+        # Closes the dialog without creating or exporting anything
+        # Uses default styling (no custom colors)
+        
         cancel_btn = QPushButton('Cancel')
+        
+        # reject() is a QDialog method that closes with "rejected" status
+        # The calling code can check if dialog was accepted or rejected
         cancel_btn.clicked.connect(self.reject)
+        
+        # Add to button layout
         button_layout.addWidget(cancel_btn)
         
+        # Add button layout to main layout
         main_layout.addLayout(button_layout)
     
     def add_state(self):
@@ -390,72 +590,202 @@ class DFABuilderDialog(QDialog):
             self.transitions_table.setItem(row, 2, QTableWidgetItem(to_state))
     
     def export_dfa(self):
-        """Export the current DFA configuration to a JSON file."""
-        # Validate basic requirements
+        """
+        Export the current DFA configuration to a JSON file.
+        
+        This method allows users to save their DFA to a file while keeping the builder
+        dialog open for continued editing. Unlike create_dfa(), this method:
+        - Does NOT close the dialog
+        - Does NOT set self.dfa (doesn't load into main application)
+        - Allows multiple exports with different filenames
+        - Validates DFA structure before export
+        
+        Validation Process:
+        1. Required fields: states, alphabet, start_state (must be present)
+        2. Optional fields: final_states, complete transitions (warns if missing)
+        3. User can choose to export anyway despite warnings
+        
+        Workflow:
+        1. Validate required fields (show error if missing)
+        2. Warn about optional fields (user can proceed)
+        3. Create temporary DFA object for validation
+        4. Open file save dialog
+        5. Export to JSON using standard export function
+        6. Show success message
+        7. Dialog remains open for continued editing
+        
+        Use Cases:
+        - Save work in progress
+        - Create backups before major changes
+        - Export multiple versions (v1, v2, etc.)
+        - Share DFA with others
+        
+        Returns:
+            None. Shows message boxes for user feedback.
+            
+        Raises:
+            No exceptions raised - all errors are caught and shown to user.
+        """
+        
+        # ============================================================
+        # STEP 1: Validate Required Fields
+        # ============================================================
+        # A valid DFA must have at least one state, one alphabet symbol,
+        # and a designated start state. These are non-negotiable requirements.
+        
+        # Check for states - DFA cannot exist without states
         if not self.states:
-            QMessageBox.warning(self, 'Incomplete', 'Please add at least one state before exporting.')
-            return
+            QMessageBox.warning(
+                self, 
+                'Incomplete', 
+                'Please add at least one state before exporting.'
+            )
+            return  # Exit early if validation fails
         
+        # Check for alphabet - DFA needs symbols to process
         if not self.alphabet:
-            QMessageBox.warning(self, 'Incomplete', 'Please add at least one symbol before exporting.')
-            return
+            QMessageBox.warning(
+                self, 
+                'Incomplete', 
+                'Please add at least one symbol before exporting.'
+            )
+            return  # Exit early if validation fails
         
+        # Check for start state - DFA must know where to begin
         if not self.start_state:
-            QMessageBox.warning(self, 'Incomplete', 'Please set a start state before exporting.')
-            return
+            QMessageBox.warning(
+                self, 
+                'Incomplete', 
+                'Please set a start state before exporting.'
+            )
+            return  # Exit early if validation fails
         
-        # Warn about missing final states
+        # ============================================================
+        # STEP 2: Warn About Missing Final States (Optional)
+        # ============================================================
+        # Final states are technically optional, but a DFA without them
+        # will reject ALL strings. We warn the user but allow export.
+        
         if not self.final_states:
+            # Ask user if they want to proceed without final states
             reply = QMessageBox.question(
-                self, 'No Final States',
+                self, 
+                'No Final States',
                 'No final states defined. This DFA will reject all strings. Export anyway?',
                 QMessageBox.Yes | QMessageBox.No
             )
+            # If user chooses No, cancel the export
             if reply == QMessageBox.No:
                 return
         
-        # Check for incomplete transitions
-        missing = []
+        # ============================================================
+        # STEP 3: Check for Incomplete Transitions (Optional)
+        # ============================================================
+        # A complete DFA should have a transition for every (state, symbol) pair.
+        # Missing transitions may cause runtime errors, so we warn the user.
+        
+        missing = []  # List to store missing transitions
+        
+        # Check every possible (state, symbol) combination
         for state in self.states:
             for symbol in self.alphabet:
+                # If this combination doesn't have a transition, record it
                 if (state, symbol) not in self.transitions:
                     missing.append(f"({state}, {symbol})")
         
+        # If there are missing transitions, warn the user
         if missing:
+            # Show first 5 missing transitions (to avoid overwhelming message)
+            missing_preview = ", ".join(missing[:5])
+            # Add "..." if there are more than 5 missing
+            if len(missing) > 5:
+                missing_preview += "..."
+            
+            # Ask user if they want to proceed with incomplete transitions
             reply = QMessageBox.question(
-                self, 'Incomplete Transitions',
-                f'Missing transitions: {", ".join(missing[:5])}{"..." if len(missing) > 5 else ""}\n\n'
+                self, 
+                'Incomplete Transitions',
+                f'Missing transitions: {missing_preview}\n\n'
                 f'Total missing: {len(missing)}\n\n'
                 f'Export anyway? (DFA may not work correctly)',
                 QMessageBox.Yes | QMessageBox.No
             )
+            # If user chooses No, cancel the export
             if reply == QMessageBox.No:
                 return
         
-        # Try to create and export DFA
+        # ============================================================
+        # STEP 4: Create Temporary DFA and Export
+        # ============================================================
+        # If we reach here, user has confirmed they want to export.
+        # We create a temporary DFA object to validate the structure
+        # and then export it to JSON.
+        
         try:
+            # Create a temporary DFA object for validation and export
+            # This does NOT set self.dfa (which would load it into the app)
+            # Note: Lists are converted to sets as required by DFA class
             temp_dfa = DFA(
-                states=set(self.states),
-                alphabet=set(self.alphabet),
-                transitions=self.transitions,
-                start_state=self.start_state,
-                final_states=set(self.final_states)
+                states=set(self.states),           # Convert list to set
+                alphabet=set(self.alphabet),       # Convert list to set
+                transitions=self.transitions,      # Already a dict
+                start_state=self.start_state,      # String
+                final_states=set(self.final_states)  # Convert list to set
             )
             
-            # Open file dialog
+            # ============================================================
+            # STEP 5: Open File Save Dialog
+            # ============================================================
+            # Let user choose where to save the file
+            # Default filename: 'my_dfa.json'
+            # File filter: Only show .json files by default
+            
             filename, _ = QFileDialog.getSaveFileName(
-                self, 'Export DFA as JSON', 'my_dfa.json', 'JSON Files (*.json);;All Files (*)'
+                self,                              # Parent widget
+                'Export DFA as JSON',              # Dialog title
+                'my_dfa.json',                     # Default filename
+                'JSON Files (*.json);;All Files (*)'  # File type filters
             )
+            
+            # ============================================================
+            # STEP 6: Export to JSON File
+            # ============================================================
+            # If user didn't cancel the dialog (filename is not empty)
             
             if filename:
+                # Import the export function (lazy import to avoid circular dependencies)
                 from dfa import export_dfa_to_json
+                
+                # Export the DFA to the chosen file
+                # This uses the standard export function from dfa.py
                 export_dfa_to_json(temp_dfa, filename)
+                
+                # Show success message to user
+                # Note: Dialog stays open for continued editing
                 QMessageBox.information(
-                    self, 'Success', 
-                    f'DFA exported to {filename}\n\nYou can continue editing or click "Create DFA" to load it.'
+                    self, 
+                    'Success', 
+                    f'DFA exported to {filename}\n\n'
+                    f'You can continue editing or click "Create DFA" to load it.'
                 )
+                
         except Exception as e:
-            QMessageBox.critical(self, 'Error', f'Failed to export DFA:\n{str(e)}')
+            # ============================================================
+            # STEP 7: Handle Any Errors
+            # ============================================================
+            # Catch any errors that occur during DFA creation or export
+            # This includes:
+            # - DFA validation errors (invalid structure)
+            # - File I/O errors (permissions, disk full, etc.)
+            # - Any other unexpected errors
+            
+            QMessageBox.critical(
+                self, 
+                'Error', 
+                f'Failed to export DFA:\n{str(e)}'
+            )
+            # Note: We don't re-raise the exception - just show it to user
+            # This keeps the dialog open so user can fix issues
     
     def create_dfa(self):
         """Create the DFA and close dialog."""
